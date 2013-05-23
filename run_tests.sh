@@ -6,7 +6,7 @@ set -o errexit
 # Increment me any time the environment should be rebuilt.
 # This includes dependncy changes, directory renames, etc.
 # Simple integer secuence: 1, 2, 3...
-environment_version=31
+environment_version=34
 #--------------------------------------------------------#
 
 function usage {
@@ -80,6 +80,12 @@ manage=0
 [ "$JOB_NAME" ] || JOB_NAME="default"
 
 function process_option {
+  # If running manage command, treat the rest of options as arguments.
+  if [ $manage -eq 1 ]; then
+     testargs="$testargs $1"
+     return 0
+  fi
+
   case "$1" in
     -h|--help) usage;;
     -V|--virtual-env) always_venv=1; never_venv=0;;
@@ -130,8 +136,8 @@ function run_pylint {
 }
 
 function run_pep8 {
-  echo "Running pep8 ..."
-  ${command_wrapper} pep8 $included_dirs
+  echo "Running flake8 ..."
+  ${command_wrapper} flake8 $included_dirs
 }
 
 function run_sphinx {

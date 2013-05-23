@@ -28,6 +28,13 @@ from horizon import messages
 class UserSettingsForm(forms.SelfHandlingForm):
     language = forms.ChoiceField()
     timezone = forms.ChoiceField()
+    pagesize = forms.IntegerField(label=translation.ugettext("Items Per Page"),
+                                  min_value=1,
+                                  max_value=getattr(settings,
+                                                    'API_RESULT_LIMIT',
+                                                    1000),
+                                  help_text=translation.ugettext(
+                                      "Number of items to show per page"))
 
     def __init__(self, *args, **kwargs):
         super(UserSettingsForm, self).__init__(*args, **kwargs)
@@ -70,6 +77,8 @@ class UserSettingsForm(forms.SelfHandlingForm):
         request.session['django_timezone'] = pytz.timezone(
             data['timezone']).zone
 
-        messages.success(request, translation.ugettext("Settings saved."))
+        request.session['horizon_pagesize'] = data['pagesize']
+
+        messages.success(request, translation.ugettext_lazy("Settings saved."))
 
         return response

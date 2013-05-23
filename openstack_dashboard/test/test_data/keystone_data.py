@@ -108,6 +108,7 @@ def data(TEST):
                  'email': 'test@example.com',
                  'password': 'password',
                  'token': 'test_token',
+                 'project_id': '1',
                  'enabled': True}
     user = users.User(users.UserManager(None), user_dict)
     user_dict = {'id': "2",
@@ -115,6 +116,7 @@ def data(TEST):
                  'email': 'two@example.com',
                  'password': 'password',
                  'token': 'test_token',
+                 'project_id': '1',
                  'enabled': True}
     user2 = users.User(users.UserManager(None), user_dict)
     user_dict = {'id': "3",
@@ -122,6 +124,7 @@ def data(TEST):
                  'email': 'three@example.com',
                  'password': 'password',
                  'token': 'test_token',
+                 'project_id': '1',
                  'enabled': True}
     user3 = users.User(users.UserManager(None), user_dict)
     TEST.users.add(user, user2, user3)
@@ -136,9 +139,14 @@ def data(TEST):
                      'name': 'disabled_tenant',
                      'description': "a disabled test tenant.",
                      'enabled': False}
+    tenant_dict_unicode = {'id': "3",
+                           'name': u'\u4e91\u89c4\u5219',
+                           'description': "an unicode-named tenant.",
+                           'enabled': True}
     tenant = tenants.Tenant(tenants.TenantManager, tenant_dict)
     disabled_tenant = tenants.Tenant(tenants.TenantManager, tenant_dict_2)
-    TEST.tenants.add(tenant, disabled_tenant)
+    tenant_unicode = tenants.Tenant(tenants.TenantManager, tenant_dict_unicode)
+    TEST.tenants.add(tenant, disabled_tenant, tenant_unicode)
     TEST.tenant = tenant  # Your "current" tenant
 
     tomorrow = datetime_safe.datetime.now() + timedelta(days=1)

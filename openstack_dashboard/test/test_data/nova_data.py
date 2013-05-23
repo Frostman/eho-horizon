@@ -267,6 +267,7 @@ def data(TEST):
                                                 "description": u"NotDefault."})
 
         rule = {'id': get_id(is_uuid),
+                'group': {},
                 'ip_protocol': u"tcp",
                 'from_port': u"80",
                 'to_port': u"80",
@@ -274,6 +275,7 @@ def data(TEST):
                 'ip_range': {'cidr': u"0.0.0.0/32"}}
 
         icmp_rule = {'id': get_id(is_uuid),
+                     'group': {},
                      'ip_protocol': u"icmp",
                      'from_port': u"9",
                      'to_port': u"5",
@@ -281,6 +283,7 @@ def data(TEST):
                      'ip_range': {'cidr': u"0.0.0.0/32"}}
 
         group_rule = {'id': 3,
+                      'group': {},
                       'ip_protocol': u"tcp",
                       'from_port': u"80",
                       'to_port': u"80",
@@ -358,6 +361,8 @@ def data(TEST):
     TEST.limits = limits
 
     # Servers
+    tenant3 = TEST.tenants.list()[2]
+
     vals = {"host": "http://nova.example.com:8774",
             "name": "server_1",
             "status": "ACTIVE",
@@ -374,7 +379,13 @@ def data(TEST):
                  "server_id": "2"})
     server_2 = servers.Server(servers.ServerManager(None),
                               json.loads(SERVER_DATA % vals)['server'])
-    TEST.servers.add(server_1, server_2)
+    vals.update({"name": u'\u4e91\u89c4\u5219',
+                 "status": "ACTIVE",
+                 "tenant_id": tenant3.id,
+                 "server_id": "3"})
+    server_3 = servers.Server(servers.ServerManager(None),
+                              json.loads(SERVER_DATA % vals)['server'])
+    TEST.servers.add(server_1, server_2, server_3)
 
     # VNC Console Data
     console = {u'console': {u'url': u'http://example.com:6080/vnc_auto.html',
@@ -430,6 +441,17 @@ def data(TEST):
     usage_obj = usage.Usage(usage.UsageManager(None),
                             json.loads(USAGE_DATA % usage_vals))
     TEST.usages.add(usage_obj)
+
+    # Usage
+    usage_2_vals = {"tenant_id": tenant3.id,
+                    "instance_name": server_3.name,
+                    "flavor_name": flavor_1.name,
+                    "flavor_vcpus": flavor_1.vcpus,
+                    "flavor_disk": flavor_1.disk,
+                    "flavor_ram": flavor_1.ram}
+    usage_obj_2 = usage.Usage(usage.UsageManager(None),
+                              json.loads(USAGE_DATA % usage_2_vals))
+    TEST.usages.add(usage_obj_2)
 
     volume_snapshot = vol_snaps.Snapshot(vol_snaps.SnapshotManager(None),
                         {'id': '40f3fabf-3613-4f5e-90e5-6c9a08333fc3',

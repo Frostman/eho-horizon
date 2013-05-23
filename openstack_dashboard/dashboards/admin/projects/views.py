@@ -71,7 +71,7 @@ class IndexView(tables.DataTableView):
     def get_data(self):
         tenants = []
         try:
-            tenants = api.keystone.tenant_list(self.request, admin=True)
+            tenants = api.keystone.tenant_list(self.request)
         except:
             exceptions.handle(self.request,
                               _("Unable to retrieve project list."))
@@ -116,19 +116,18 @@ class UsersView(tables.MultiTableView):
         return context
 
 
-class TenantUsageView(usage.UsageView):
-    table_class = usage.TenantUsageTable
-    usage_class = usage.TenantUsage
+class ProjectUsageView(usage.UsageView):
+    table_class = usage.ProjectUsageTable
+    usage_class = usage.ProjectUsage
     template_name = 'admin/projects/usage.html'
 
     def get_data(self):
-        super(TenantUsageView, self).get_data()
+        super(ProjectUsageView, self).get_data()
         return self.usage.get_instances()
 
 
 class CreateProjectView(workflows.WorkflowView):
     workflow_class = CreateProject
-    template_name = "admin/projects/create.html"
 
     def get_initial(self):
         initial = super(CreateProjectView, self).get_initial()
@@ -148,7 +147,6 @@ class CreateProjectView(workflows.WorkflowView):
 
 class UpdateProjectView(workflows.WorkflowView):
     workflow_class = UpdateProject
-    template_name = "admin/projects/update.html"
 
     def get_initial(self):
         initial = super(UpdateProjectView, self).get_initial()
@@ -183,7 +181,7 @@ class CreateUserView(CreateView):
     def get_initial(self):
         default_role = api.keystone.get_default_role(self.request)
         return {'role_id': getattr(default_role, "id", None),
-                'tenant_id': self.kwargs['tenant_id']}
+                'project': self.kwargs['tenant_id']}
 
     def get_context_data(self, **kwargs):
         context = super(CreateUserView, self).get_context_data(**kwargs)

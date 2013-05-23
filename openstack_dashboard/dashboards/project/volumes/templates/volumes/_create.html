@@ -1,8 +1,9 @@
 {% extends "horizon/common/_modal_form.html" %}
 {% load i18n horizon humanize %}
+{% load url from future %}
 
 {% block form_id %}{% endblock %}
-{% block form_action %}{% url horizon:project:volumes:create %}?{{ request.GET.urlencode }}{% endblock %}
+{% block form_action %}{% url 'horizon:project:volumes:create' %}?{{ request.GET.urlencode }}{% endblock %}
 
 {% block modal_id %}create_volume_modal{% endblock %}
 {% block modal-header %}{% trans "Create Volume" %}{% endblock %}
@@ -22,12 +23,11 @@
     <h3>{% trans "Volume Quotas" %}</h3>
 
     <div class="quota_title clearfix">
-      <strong>{% trans "Total Gigabytes" %} <span>({{ usages.gigabytes.used|intcomma }} GB)</span></strong>
-      <p>{{ usages.gigabytes.available|quota:"GB"|intcomma }}</p>
+      <strong>{% trans "Total Gigabytes" %} <span>({{ usages.gigabytes.used|intcomma }} {% trans "GB" %})</span></strong>
+      <p>{{ usages.gigabytes.available|quota:_("GB")|intcomma }}</p>
     </div>
 
     <div id="quota_size" data-progress-indicator-for="id_size" data-quota-limit="{{ usages.gigabytes.quota }}" data-quota-used="{{ usages.gigabytes.used }}" class="quota_bar">
-      {% horizon_progress_bar usages.gigabytes.used usages.gigabytes.quota %}
     </div>
 
     <div class="quota_title clearfix">
@@ -36,7 +36,6 @@
     </div>
 
     <div id="quota_volumes" data-progress-indicator-step-by="1" data-quota-limit="{{ usages.volumes.quota }}" data-quota-used="{{ usages.volumes.used }}" class="quota_bar">
-      {% horizon_progress_bar usages.volumes.used usages.volumes.quota %}
     </div>
   </div>
 
@@ -53,5 +52,5 @@
 
 {% block modal-footer %}
   <input class="btn btn-primary pull-right" type="submit" value="{% trans "Create Volume" %}" />
-  <a href="{% url horizon:project:volumes:index %}" class="btn secondary cancel close">{% trans "Cancel" %}</a>
+  <a href="{% url 'horizon:project:volumes:index' %}" class="btn secondary cancel close">{% trans "Cancel" %}</a>
 {% endblock %}

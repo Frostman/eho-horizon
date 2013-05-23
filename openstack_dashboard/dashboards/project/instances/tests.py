@@ -34,6 +34,7 @@ from openstack_dashboard.usage import quotas
 from .tables import LaunchLink
 from .tabs import InstanceDetailTabs
 from .workflows import LaunchInstance
+from horizon.workflows.views import WorkflowView
 
 
 INDEX_URL = reverse('horizon:project:instances:index')
@@ -46,8 +47,9 @@ class InstanceTests(test.TestCase):
     def test_index(self):
         api.nova.flavor_list(IsA(http.HttpRequest)) \
             .AndReturn(self.flavors.list())
-        api.nova.server_list(IsA(http.HttpRequest)) \
-            .AndReturn(self.servers.list())
+        search_opts = {'marker': None, 'paginate': True}
+        api.nova.server_list(IsA(http.HttpRequest), search_opts=search_opts) \
+            .AndReturn([self.servers.list(), False])
         api.nova.tenant_absolute_limits(IsA(http.HttpRequest), reserved=True) \
            .MultipleTimes().AndReturn(self.limits['absolute'])
 
@@ -65,7 +67,8 @@ class InstanceTests(test.TestCase):
     @test.create_stubs({api.nova: ('server_list',
                                    'tenant_absolute_limits')})
     def test_index_server_list_exception(self):
-        api.nova.server_list(IsA(http.HttpRequest)) \
+        search_opts = {'marker': None, 'paginate': True}
+        api.nova.server_list(IsA(http.HttpRequest), search_opts=search_opts) \
             .AndRaise(self.exceptions.nova)
         api.nova.tenant_absolute_limits(IsA(http.HttpRequest), reserved=True) \
            .MultipleTimes().AndReturn(self.limits['absolute'])
@@ -86,8 +89,9 @@ class InstanceTests(test.TestCase):
         servers = self.servers.list()
         flavors = self.flavors.list()
         full_flavors = SortedDict([(f.id, f) for f in flavors])
-
-        api.nova.server_list(IsA(http.HttpRequest)).AndReturn(servers)
+        search_opts = {'marker': None, 'paginate': True}
+        api.nova.server_list(IsA(http.HttpRequest), search_opts=search_opts) \
+            .AndReturn([servers, False])
         api.nova.flavor_list(IsA(http.HttpRequest)) \
             .AndRaise(self.exceptions.nova)
         for server in servers:
@@ -117,7 +121,9 @@ class InstanceTests(test.TestCase):
         for i, server in enumerate(servers):
             server.flavor['id'] = str(uuid.UUID(int=i))
 
-        api.nova.server_list(IsA(http.HttpRequest)).AndReturn(servers)
+        search_opts = {'marker': None, 'paginate': True}
+        api.nova.server_list(IsA(http.HttpRequest), search_opts=search_opts) \
+            .AndReturn([servers, False])
         api.nova.flavor_list(IsA(http.HttpRequest)).AndReturn(flavors)
         for server in servers:
             api.nova.flavor_get(IsA(http.HttpRequest), server.flavor["id"]). \
@@ -141,8 +147,9 @@ class InstanceTests(test.TestCase):
     def test_terminate_instance(self):
         server = self.servers.first()
 
-        api.nova.server_list(IsA(http.HttpRequest)) \
-            .AndReturn(self.servers.list())
+        search_opts = {'marker': None, 'paginate': True}
+        api.nova.server_list(IsA(http.HttpRequest), search_opts=search_opts) \
+            .AndReturn([self.servers.list(), False])
         api.nova.flavor_list(IgnoreArg()).AndReturn(self.flavors.list())
         api.nova.server_delete(IsA(http.HttpRequest), server.id)
 
@@ -159,8 +166,9 @@ class InstanceTests(test.TestCase):
     def test_terminate_instance_exception(self):
         server = self.servers.first()
 
-        api.nova.server_list(IsA(http.HttpRequest)) \
-            .AndReturn(self.servers.list())
+        search_opts = {'marker': None, 'paginate': True}
+        api.nova.server_list(IsA(http.HttpRequest), search_opts=search_opts) \
+            .AndReturn([self.servers.list(), False])
         api.nova.flavor_list(IgnoreArg()).AndReturn(self.flavors.list())
         api.nova.server_delete(IsA(http.HttpRequest), server.id) \
                           .AndRaise(self.exceptions.nova)
@@ -180,8 +188,9 @@ class InstanceTests(test.TestCase):
 
         api.nova.flavor_list(IsA(http.HttpRequest)) \
             .AndReturn(self.flavors.list())
-        api.nova.server_list(IsA(http.HttpRequest)) \
-            .AndReturn(self.servers.list())
+        search_opts = {'marker': None, 'paginate': True}
+        api.nova.server_list(IsA(http.HttpRequest), search_opts=search_opts) \
+            .AndReturn([self.servers.list(), False])
         api.nova.server_pause(IsA(http.HttpRequest), server.id)
 
         self.mox.ReplayAll()
@@ -199,8 +208,9 @@ class InstanceTests(test.TestCase):
 
         api.nova.flavor_list(IsA(http.HttpRequest)) \
             .AndReturn(self.flavors.list())
-        api.nova.server_list(IsA(http.HttpRequest)) \
-            .AndReturn(self.servers.list())
+        search_opts = {'marker': None, 'paginate': True}
+        api.nova.server_list(IsA(http.HttpRequest), search_opts=search_opts) \
+            .AndReturn([self.servers.list(), False])
         api.nova.server_pause(IsA(http.HttpRequest), server.id) \
                         .AndRaise(self.exceptions.nova)
 
@@ -220,8 +230,9 @@ class InstanceTests(test.TestCase):
 
         api.nova.flavor_list(IsA(http.HttpRequest)) \
             .AndReturn(self.flavors.list())
-        api.nova.server_list(IsA(http.HttpRequest)) \
-            .AndReturn(self.servers.list())
+        search_opts = {'marker': None, 'paginate': True}
+        api.nova.server_list(IsA(http.HttpRequest), search_opts=search_opts) \
+            .AndReturn([self.servers.list(), False])
         api.nova.server_unpause(IsA(http.HttpRequest), server.id)
 
         self.mox.ReplayAll()
@@ -240,8 +251,9 @@ class InstanceTests(test.TestCase):
 
         api.nova.flavor_list(IsA(http.HttpRequest)) \
             .AndReturn(self.flavors.list())
-        api.nova.server_list(IsA(http.HttpRequest)) \
-            .AndReturn(self.servers.list())
+        search_opts = {'marker': None, 'paginate': True}
+        api.nova.server_list(IsA(http.HttpRequest), search_opts=search_opts) \
+            .AndReturn([self.servers.list(), False])
         api.nova.server_unpause(IsA(http.HttpRequest), server.id) \
                           .AndRaise(self.exceptions.nova)
 
@@ -260,8 +272,9 @@ class InstanceTests(test.TestCase):
 
         api.nova.flavor_list(IsA(http.HttpRequest)) \
             .AndReturn(self.flavors.list())
-        api.nova.server_list(IsA(http.HttpRequest)) \
-            .AndReturn(self.servers.list())
+        search_opts = {'marker': None, 'paginate': True}
+        api.nova.server_list(IsA(http.HttpRequest), search_opts=search_opts) \
+            .AndReturn([self.servers.list(), False])
         api.nova.server_reboot(IsA(http.HttpRequest), server.id,
                                api.nova.REBOOT_HARD)
 
@@ -280,8 +293,9 @@ class InstanceTests(test.TestCase):
 
         api.nova.flavor_list(IsA(http.HttpRequest)) \
             .AndReturn(self.flavors.list())
-        api.nova.server_list(IsA(http.HttpRequest)) \
-            .AndReturn(self.servers.list())
+        search_opts = {'marker': None, 'paginate': True}
+        api.nova.server_list(IsA(http.HttpRequest), search_opts=search_opts) \
+            .AndReturn([self.servers.list(), False])
         api.nova.server_reboot(IsA(http.HttpRequest), server.id,
                                api.nova.REBOOT_HARD) \
             .AndRaise(self.exceptions.nova)
@@ -301,8 +315,9 @@ class InstanceTests(test.TestCase):
 
         api.nova.flavor_list(IsA(http.HttpRequest)) \
             .AndReturn(self.flavors.list())
-        api.nova.server_list(IsA(http.HttpRequest)) \
-            .AndReturn(self.servers.list())
+        search_opts = {'marker': None, 'paginate': True}
+        api.nova.server_list(IsA(http.HttpRequest), search_opts=search_opts) \
+            .AndReturn([self.servers.list(), False])
         api.nova.server_reboot(IsA(http.HttpRequest), server.id,
                                api.nova.REBOOT_SOFT)
 
@@ -321,8 +336,9 @@ class InstanceTests(test.TestCase):
 
         api.nova.flavor_list(IsA(http.HttpRequest)) \
             .AndReturn(self.flavors.list())
-        api.nova.server_list(IsA(http.HttpRequest)) \
-            .AndReturn(self.servers.list())
+        search_opts = {'marker': None, 'paginate': True}
+        api.nova.server_list(IsA(http.HttpRequest), search_opts=search_opts) \
+            .AndReturn([self.servers.list(), False])
         api.nova.server_suspend(IsA(http.HttpRequest), unicode(server.id))
 
         self.mox.ReplayAll()
@@ -340,8 +356,9 @@ class InstanceTests(test.TestCase):
 
         api.nova.flavor_list(IsA(http.HttpRequest)) \
             .AndReturn(self.flavors.list())
-        api.nova.server_list(IsA(http.HttpRequest)) \
-            .AndReturn(self.servers.list())
+        search_opts = {'marker': None, 'paginate': True}
+        api.nova.server_list(IsA(http.HttpRequest), search_opts=search_opts) \
+            .AndReturn([self.servers.list(), False])
         api.nova.server_suspend(IsA(http.HttpRequest), unicode(server.id)) \
             .AndRaise(self.exceptions.nova)
 
@@ -361,8 +378,9 @@ class InstanceTests(test.TestCase):
 
         api.nova.flavor_list(IsA(http.HttpRequest)) \
             .AndReturn(self.flavors.list())
-        api.nova.server_list(IsA(http.HttpRequest)) \
-            .AndReturn(self.servers.list())
+        search_opts = {'marker': None, 'paginate': True}
+        api.nova.server_list(IsA(http.HttpRequest), search_opts=search_opts) \
+            .AndReturn([self.servers.list(), False])
         api.nova.server_resume(IsA(http.HttpRequest), unicode(server.id))
 
         self.mox.ReplayAll()
@@ -381,8 +399,9 @@ class InstanceTests(test.TestCase):
 
         api.nova.flavor_list(IsA(http.HttpRequest)) \
             .AndReturn(self.flavors.list())
-        api.nova.server_list(IsA(http.HttpRequest)) \
-            .AndReturn(self.servers.list())
+        search_opts = {'marker': None, 'paginate': True}
+        api.nova.server_list(IsA(http.HttpRequest), search_opts=search_opts) \
+            .AndReturn([self.servers.list(), False])
         api.nova.server_resume(IsA(http.HttpRequest),
                                unicode(server.id)) \
             .AndRaise(self.exceptions.nova)
@@ -642,7 +661,7 @@ class InstanceTests(test.TestCase):
         url = reverse('horizon:project:instances:update', args=[server.id])
         res = self.client.get(url)
 
-        self.assertTemplateUsed(res, 'project/instances/update.html')
+        self.assertTemplateUsed(res, WorkflowView.template_name)
 
     @test.create_stubs(instance_update_get_stubs)
     def test_instance_update_get_server_get_exception(self):
@@ -826,8 +845,7 @@ class InstanceTests(test.TestCase):
         res = self.client.get("%s?%s" % (url, params))
 
         workflow = res.context['workflow']
-        self.assertTemplateUsed(res,
-                        'project/instances/launch.html')
+        self.assertTemplateUsed(res, WorkflowView.template_name)
         self.assertEqual(res.context['workflow'].name, LaunchInstance.name)
         step = workflow.get_step("setinstancedetailsaction")
         self.assertEqual(step.action.initial['image_id'], image.id)
@@ -893,7 +911,8 @@ class InstanceTests(test.TestCase):
                                [sec_group.name],
                                block_device_mapping,
                                nics=nics,
-                               instance_count=IsA(int))
+                               instance_count=IsA(int),
+                               admin_pass='password')
 
         self.mox.ReplayAll()
 
@@ -910,7 +929,9 @@ class InstanceTests(test.TestCase):
                      'volume_id': volume_choice,
                      'device_name': device_name,
                      'network': self.networks.first().id,
-                     'count': 1}
+                     'count': 1,
+                     'admin_pass': 'password',
+                     'confirm_admin_pass': 'password'}
         url = reverse('horizon:project:instances:launch')
         res = self.client.post(url, form_data)
 
@@ -984,8 +1005,7 @@ class InstanceTests(test.TestCase):
         self.assertFormErrors(res, 1, 'There are no image sources available; '
                                       'you must first create an image before '
                                       'attempting to launch an instance.')
-        self.assertTemplateUsed(res,
-                        'project/instances/launch.html')
+        self.assertTemplateUsed(res, WorkflowView.template_name)
 
     @test.create_stubs({api.glance: ('image_list_detailed',),
                         api.quantum: ('network_list',),
@@ -1031,8 +1051,7 @@ class InstanceTests(test.TestCase):
         url = reverse('horizon:project:instances:launch')
         res = self.client.get(url)
 
-        self.assertTemplateUsed(res,
-                        'project/instances/launch.html')
+        self.assertTemplateUsed(res, WorkflowView.template_name)
 
     @test.create_stubs({api.glance: ('image_list_detailed',),
                         api.quantum: ('network_list',),
@@ -1082,7 +1101,8 @@ class InstanceTests(test.TestCase):
                                [sec_group.name],
                                None,
                                nics=nics,
-                               instance_count=IsA(int)) \
+                               instance_count=IsA(int),
+                               admin_pass='password') \
                       .AndRaise(self.exceptions.keystone)
 
         self.mox.ReplayAll()
@@ -1098,7 +1118,9 @@ class InstanceTests(test.TestCase):
                      'groups': sec_group.name,
                      'volume_type': '',
                      'network': self.networks.first().id,
-                     'count': 1}
+                     'count': 1,
+                     'admin_pass': 'password',
+                     'confirm_admin_pass': 'password'}
         url = reverse('horizon:project:instances:launch')
         res = self.client.post(url, form_data)
 
@@ -1181,8 +1203,9 @@ class InstanceTests(test.TestCase):
 
         api.nova.flavor_list(IsA(http.HttpRequest)) \
             .AndReturn(self.flavors.list())
-        api.nova.server_list(IsA(http.HttpRequest)) \
-            .AndReturn(self.servers.list())
+        search_opts = {'marker': None, 'paginate': True}
+        api.nova.server_list(IsA(http.HttpRequest), search_opts=search_opts) \
+            .AndReturn([self.servers.list(), False])
         api.nova.tenant_absolute_limits(IsA(http.HttpRequest), reserved=True) \
             .MultipleTimes().AndReturn(limits)
 
@@ -1209,8 +1232,9 @@ class InstanceTests(test.TestCase):
 
         api.nova.flavor_list(IsA(http.HttpRequest)) \
             .AndReturn(self.flavors.list())
-        api.nova.server_list(IsA(http.HttpRequest)) \
-            .AndReturn(self.servers.list())
+        search_opts = {'marker': None, 'paginate': True}
+        api.nova.server_list(IsA(http.HttpRequest), search_opts=search_opts) \
+            .AndReturn([self.servers.list(), False])
         api.nova.tenant_absolute_limits(IsA(http.HttpRequest), reserved=True) \
            .MultipleTimes().AndReturn(self.limits['absolute'])
 
@@ -1271,3 +1295,63 @@ class InstanceTests(test.TestCase):
                                  "%(key)s</option>" % {'key': keypair.name},
                             html=True,
                             msg_prefix="The default keypair was not selected.")
+
+    @test.create_stubs({api.network: ('floating_ip_target_get_by_instance',
+                                      'tenant_floating_ip_allocate',
+                                      'floating_ip_associate'),
+                        api.nova: ('server_list',
+                                   'flavor_list')})
+    def test_associate_floating_ip(self):
+        server = self.servers.first()
+        fip = self.q_floating_ips.first()
+
+        search_opts = {'marker': None, 'paginate': True}
+        api.nova.server_list(IsA(http.HttpRequest), search_opts=search_opts) \
+            .AndReturn([self.servers.list(), False])
+        api.nova.flavor_list(IgnoreArg()).AndReturn(self.flavors.list())
+        api.network.floating_ip_target_get_by_instance(
+            IsA(http.HttpRequest),
+            server.id).AndReturn(server.id)
+        api.network.tenant_floating_ip_allocate(
+            IsA(http.HttpRequest)).AndReturn(fip)
+        api.network.floating_ip_associate(
+            IsA(http.HttpRequest), fip.id, server.id)
+
+        self.mox.ReplayAll()
+
+        formData = {'action': 'instances__associate-simple__%s' % server.id}
+        res = self.client.post(INDEX_URL, formData)
+
+        self.assertRedirectsNoFollow(res, INDEX_URL)
+
+    @test.create_stubs({api.network: ('floating_ip_target_get_by_instance',
+                                      'tenant_floating_ip_list',
+                                      'floating_ip_disassociate',
+                                      'tenant_floating_ip_release'),
+                        api.nova: ('server_list',
+                                   'flavor_list')})
+    def test_disassociate_floating_ip(self):
+        server = self.servers.first()
+        fip = self.q_floating_ips.first()
+        fip.port_id = server.id
+
+        search_opts = {'marker': None, 'paginate': True}
+        api.nova.server_list(IsA(http.HttpRequest), search_opts=search_opts) \
+            .AndReturn([self.servers.list(), False])
+        api.nova.flavor_list(IgnoreArg()).AndReturn(self.flavors.list())
+        api.network.floating_ip_target_get_by_instance(
+            IsA(http.HttpRequest),
+            server.id).AndReturn(server.id)
+        api.network.tenant_floating_ip_list(
+            IsA(http.HttpRequest)).AndReturn([fip])
+        api.network.floating_ip_disassociate(
+            IsA(http.HttpRequest), fip.id, server.id)
+        api.network.tenant_floating_ip_release(
+            IsA(http.HttpRequest), fip.id)
+
+        self.mox.ReplayAll()
+
+        formData = {'action': 'instances__disassociate__%s' % server.id}
+        res = self.client.post(INDEX_URL, formData)
+
+        self.assertRedirectsNoFollow(res, INDEX_URL)
